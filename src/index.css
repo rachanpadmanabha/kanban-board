@@ -1,68 +1,160 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@theme {
+  --color-surface-bright: #353946;
+  --color-on-primary-container: #004965;
+  --color-on-secondary: #131e8c;
+  --color-primary-fixed-dim: #7bd0ff;
+  --color-secondary-fixed: #e0e0ff;
+  --color-surface-dim: #0f131f;
+  --color-on-surface: #dfe2f3;
+  --color-primary: #8ed5ff;
+  --color-inverse-surface: #dfe2f3;
+  --color-tertiary-container: #22c990;
+  --color-surface-container-lowest: #0a0e1a;
+  --color-surface-container-high: #262a37;
+  --color-surface-variant: #313442;
+  --color-tertiary: #4ee6aa;
+  --color-tertiary-fixed: #68fcbf;
+  --color-on-tertiary-container: #004e35;
+  --color-surface-tint: #7bd0ff;
+  --color-surface-container: #1b1f1c;
+  --color-primary-fixed: #c4e7ff;
+  --color-on-primary-fixed: #001e2c;
+  --color-inverse-on-surface: #2c303d;
+  --color-on-surface-variant: #bdc8d1;
+  --color-on-background: #dfe2f3;
+  --color-on-error-container: #ffdad6;
+  --color-on-secondary-fixed: #000767;
+  --color-on-secondary-fixed-variant: #2f3aa3;
+  --color-error-container: #93000a;
+  --color-on-tertiary-fixed-variant: #005137;
+  --color-background: #0f131f;
+  --color-outline: #87929a;
+  --color-secondary: #bdc2ff;
+  --color-surface-container-low: #171b28;
+  --color-on-secondary-container: #a8afff;
+  --color-outline-variant: #3e484f;
+  --color-primary-container: #38bdf8;
+  --color-on-primary: #00354a;
+  --color-error: #ffb4ab;
+  --color-on-tertiary: #003825;
+  --color-secondary-container: #2f3aa3;
+  --color-surface-container-highest: #313442;
+  --color-on-error: #690005;
+  --color-inverse-primary: #00668a;
+  --color-surface: #0f131f;
+  --color-tertiary-fixed-dim: #45dfa4;
+  --color-on-primary-fixed-variant: #004c69;
+  --color-secondary-fixed-dim: #bdc2ff;
+  --color-on-tertiary-fixed: #002114;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --font-headline: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-label: 'Inter', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+  --radius-card: 1rem;
+  --radius-modal: 1.25rem;
+  --radius-input: 0.75rem;
+
+  --spacing-card-gap: 16px;
+  --spacing-col-gap: 32px;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-surface-container-lowest);
+    overflow-x: hidden;
   }
-  a:hover {
-    color: #747bff;
+}
+
+@layer utilities {
+  .aurora-orb {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.15;
   }
-  button {
-    background-color: #f9f9f9;
+  .glass-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .particle-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+/* ── Arctic Flow Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-container);
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+*:hover > ::-webkit-scrollbar-thumb,
+*:active > ::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(56, 189, 248, 0.3);
+  color: white;
+}
+
+/* ── Focus Visible ── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Keyframe Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

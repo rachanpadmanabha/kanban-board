@@ -1,0 +1,36 @@
+{
+  "name": "projects/15905917205411598030",
+  "projectId": "15905917205411598030",
+  "title": "Arctic Glass Kanban",
+  "visibility": "PRIVATE",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "designTheme": {
+    "colorMode": "DARK",
+    "font": "INTER",
+    "roundness": "ROUND_FULL",
+    "customColor": "#38bdf8"
+  },
+  "screens": {
+    "kanban-board": {
+      "id": "9c19ad57a4084a758895239465a690f5",
+      "sourceScreen": "projects/15905917205411598030/screens/9c19ad57a4084a758895239465a690f5",
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 2272
+    },
+    "task-modal": {
+      "id": "e76ffca21cc1470c9c07cdfd27d759ff",
+      "sourceScreen": "projects/15905917205411598030/screens/e76ffca21cc1470c9c07cdfd27d759ff",
+      "x": 2720,
+      "y": 0,
+      "width": 2816,
+      "height": 2252
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}

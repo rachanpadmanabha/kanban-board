@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Arctic Kanban | Polar Prism</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#353946",
+              "on-primary-container": "#004965",
+              "on-secondary": "#131e8c",
+              "primary-fixed-dim": "#7bd0ff",
+              "secondary-fixed": "#e0e0ff",
+              "surface-dim": "#0f131f",
+              "on-surface": "#dfe2f3",
+              "primary": "#8ed5ff",
+              "inverse-surface": "#dfe2f3",
+              "tertiary-container": "#22c990",
+              "surface-container-lowest": "#0a0e1a",
+              "surface-container-high": "#262a37",
+              "surface-variant": "#313442",
+              "tertiary": "#4ee6aa",
+              "tertiary-fixed": "#68fcbf",
+              "on-tertiary-container": "#004e35",
+              "surface-tint": "#7bd0ff",
+              "surface-container": "#1b1f1c",
+              "primary-fixed": "#c4e7ff",
+              "on-primary-fixed": "#001e2c",
+              "inverse-on-surface": "#2c303d",
+              "on-surface-variant": "#bdc8d1",
+              "on-background": "#dfe2f3",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed": "#000767",
+              "on-secondary-fixed-variant": "#2f3aa3",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#005137",
+              "background": "#0f131f",
+              "outline": "#87929a",
+              "secondary": "#bdc2ff",
+              "surface-container-low": "#171b28",
+              "on-secondary-container": "#a8afff",
+              "outline-variant": "#3e484f",
+              "primary-container": "#38bdf8",
+              "on-primary": "#00354a",
+              "error": "#ffb4ab",
+              "on-tertiary": "#003825",
+              "secondary-container": "#2f3aa3",
+              "surface-container-highest": "#313442",
+              "on-error": "#690005",
+              "inverse-primary": "#00668a",
+              "surface": "#0f131f",
+              "tertiary-fixed-dim": "#45dfa4",
+              "on-primary-fixed-variant": "#004c69",
+              "secondary-fixed-dim": "#bdc2ff",
+              "on-tertiary-fixed": "#002114"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0a0e1a;
+        overflow-x: hidden;
+      }
+      .aurora-orb {
+        position: fixed;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(120px);
+        z-index: -1;
+        opacity: 0.15;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .particle-grid {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary/30">
+<!-- Ambient Aurora Background -->
+<div class="aurora-orb bg-primary top-[-10%] left-[-10%]"></div>
+<div class="aurora-orb bg-secondary bottom-[-10%] right-[-10%]"></div>
+<div class="fixed inset-0 particle-grid pointer-events-none"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16 w-full bg-slate-950/40 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-slate-950/50">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold bg-gradient-to-br from-white to-sky-300 bg-clip-text text-transparent font-['Inter'] tracking-tight">Arctic Kanban</span>
+<div class="hidden md:flex gap-6 items-center h-full">
+<a class="text-sky-300 font-semibold border-b-2 border-sky-400 pb-1 font-['Inter'] tracking-tight" href="#">Dashboard</a>
+<a class="text-slate-400 hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">Projects</a>
+<a class="text-slate-400 hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">Team</a>
+<a class="text-slate-400 hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">Analytics</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="bg-white/5 border-none rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-primary/50 text-white placeholder-slate-500 transition-all" placeholder="Search tasks..." type="text"/>
+</div>
+<button class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all active:scale-95 transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all active:scale-95 transform">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full border border-white/20 overflow-hidden ml-2 active:scale-95 transform transition-transform cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="User profile avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVwhHisDiZBWtWTi0WW9gB1Of8D3283rp8j7DvwRulhR7vLYv2oDTbSEf3IUQDPUdRbW5sw_flzcCwMAnEdGYlnAjiOzvo0dsUiBgXfWkx9j9AcK-hdPodqPb10ELcEsa3yC77L95DKIEotSkxa0d9A_ANQwmlhzkDnyZVUV02hY0LGxO6gaE1R5plxRsGD2WToIHL_ztC5MrlerybyxV8eVmxwQhq7813SjFmKUnHeQJ2czdN8IIhBe3Fr3u5F1DUrnBM2p3l5dTy"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 flex flex-col py-6 gap-2 bg-slate-900/60 backdrop-blur-2xl border-r border-white/5 font-['Inter'] text-sm font-medium">
+<div class="px-6 mb-6">
+<h2 class="text-lg font-bold text-white">Polar Prism</h2>
+<p class="text-slate-500 text-xs">Active Sprint 42</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="bg-white/10 text-white rounded-full mx-2 px-4 py-2 flex items-center gap-3 hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined text-sky-400">view_kanban</span>
+                Board
+            </a>
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+                List
+            </a>
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">shutter_speed</span>
+                Timeline
+            </a>
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+                Calendar
+            </a>
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+                Files
+            </a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Task
+            </button>
+</div>
+<div class="mt-4 flex flex-col gap-1">
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+                Help
+            </a>
+<a class="text-slate-400 hover:text-white mx-2 px-4 py-2 flex items-center gap-3 hover:bg-white/5 rounded-full transition-colors" href="#">
+<span class="material-symbols-outlined">archive</span>
+                Archive
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-8 min-h-screen">
+<!-- Board Toolbar -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+<div class="flex items-center gap-4 text-sm">
+<div class="flex bg-surface-container-low p-1 rounded-full border border-white/5">
+<button class="px-6 py-1.5 rounded-full bg-surface-container-highest text-white font-medium shadow-sm">Board</button>
+<button class="px-6 py-1.5 rounded-full text-slate-400 hover:text-white transition-colors">List</button>
+</div>
+<div class="h-6 w-px bg-white/10 mx-2"></div>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 rounded-full glass-card text-xs font-semibold text-white">All Tasks</button>
+<button class="px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-400 transition-colors">My Tasks</button>
+<button class="px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-400 transition-colors">High Priority</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2 mr-4">
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-container-lowest" data-alt="Team member avatar A" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_Pg8dWv0klnaCr3scO1bxFBpQHdr7EGg-6O-PtH-OmjrMMmNIvaBkyyiERUD8maH4akiGkixltBIl19hPrIYTWEa0H3j9GbCRZtuL9NkyElj4g6jkE_yMnvsH73KUjhu1Or3YlOFFHfWy5MFJA3jchJRi1JJAnxGYGdQ47refB5AeZxufl8jppBLe8Olp-NQCeZIIM0sxvP_Qq3oom_VMQnHwx8tD6BYIkZ7uVRV2B8h5TuTu3lEegQ5okIKWJW81XDmntVXUYGf5"/>
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-container-lowest" data-alt="Team member avatar B" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNElqta05LcdKo-9Gy6JzlSkcfD3_plxejxxt8cW--8n8gpoF-FrifNb6Fn92c-Zv1xlQ8CGBYkwdOORfhvn1QhL5i7VroZrK8FDQh6GfxvNfJTsWXBrXBKGfjsvNRtdkJIaoEfwt5b5Ppyrv37xNJ3AcotJzclGq-91LewayEoFTrQ7zBKJlMY6PIZG-dwlw5bB9vyNbIqzUdlhU0rt9K7G_7B3ccp3g7uAANl28VK3onBbMv7CldTOIW__mGpaqeb9T3IER_ybNS"/>
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-container-lowest" data-alt="Team member avatar C" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA9986YKmb8LQMi3C74FyMr3R5oWcDm5Ja1LY30Y_xOLSRRWwBUtyIV-NsIwE5WJkA8k0tq8qLsavsxpWFkpdEJy5rKRvT9AQGyKjh1uWUnPafcvC_OSs02WjFJFCEUqERhjUcnkq6jDYg5iHlZsK21k4tpLlk-1eeNleeZVNhUZh1dwZo6o97-HQVKZzeSdB_z2PMnNegtSwFihr1gpQpHKYqxn0oMFaVPI4A49QGv4llnGFQyQn4F9IY1W07tD2eAB6KcqKO0Ncf"/>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-variant flex items-center justify-center text-[10px] font-bold text-slate-300">+4</div>
+</div>
+<button class="glass-card px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+                    Filter
+                </button>
+</div>
+</header>
+<!-- Kanban Board -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+<!-- Column: Todo -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-slate-400"></div>
+<h3 class="font-headline font-semibold text-white tracking-wide">Todo</h3>
+<span class="text-xs font-bold bg-white/5 px-2 py-0.5 rounded text-slate-400">4</span>
+</div>
+<button class="text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Task Card 1 -->
+<div class="glass-card p-5 rounded-DEFAULT group cursor-grab active:cursor-grabbing border-l-4 border-l-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-primary uppercase">Research</span>
+<span class="material-symbols-outlined text-slate-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
+</div>
+<h4 class="text-white font-medium mb-2 group-hover:text-primary transition-colors">Ice Shelf Analysis Pipeline</h4>
+<p class="text-body-md text-slate-400 mb-4 line-clamp-2">Develop a high-throughput data processing architecture for satellite imagery.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex gap-2">
+<span class="bg-secondary-container/30 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full">Violet</span>
+</div>
+<span class="text-[10px] text-slate-500 font-label">2h ago</span>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="glass-card p-5 rounded-DEFAULT group cursor-grab border-l-4 border-l-slate-600">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Design</span>
+</div>
+<h4 class="text-white font-medium mb-2 group-hover:text-primary transition-colors">Glacial UI Kit Refinement</h4>
+<p class="text-body-md text-slate-400 mb-4 line-clamp-2">Standardize the frost-blur components for the mobile viewport.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex gap-2">
+<span class="bg-primary-container/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">Arctic</span>
+</div>
+<span class="text-[10px] text-slate-500 font-label">5h ago</span>
+</div>
+</div>
+<!-- Task Card 3 -->
+<div class="glass-card p-5 rounded-DEFAULT group cursor-grab border-l-4 border-l-error">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-error uppercase">Urgent</span>
+</div>
+<h4 class="text-white font-medium mb-2 group-hover:text-primary transition-colors">Server Node Expansion</h4>
+<p class="text-body-md text-slate-400 mb-4 line-clamp-2">Scaling the Nordic instances to support 4k concurrent users.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="text-[10px] text-slate-500 font-label">1d ago</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-DEFAULT border-2 border-dashed border-white/5 text-slate-500 hover:text-white hover:border-white/10 transition-all font-medium text-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+                        Add Task
+                    </button>
+</div>
+</div>
+<!-- Column: In Progress -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(142,213,255,0.8)]"></div>
+<h3 class="font-headline font-semibold text-white tracking-wide">In Progress</h3>
+<span class="text-xs font-bold bg-white/5 px-2 py-0.5 rounded text-slate-400">3</span>
+</div>
+<button class="text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Task Card 1 -->
+<div class="glass-card p-5 rounded-DEFAULT group cursor-grab border-l-4 border-l-primary shadow-xl shadow-primary/5">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-primary uppercase">Core</span>
+</div>
+<h4 class="text-white font-medium mb-2 group-hover:text-primary transition-colors">Prism Engine Integration</h4>
+<p class="text-body-md text-slate-400 mb-4 line-clamp-2">Merging the new light-refraction rendering engine into the dashboard.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex gap-2">
+<span class="bg-tertiary-container/20 text-tertiary text-[10px] font-bold px-2 py-0.5 rounded-full">Active</span>
+</div>
+<div class="flex -space-x-1.5">
+<img alt="Assignee" class="w-6 h-6 rounded-full border border-surface-container-highest" data-alt="Assignee JS" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuOtM7m6ZonMsn67k5iOmyiNDmGFLYhpITrQRYB3S48dmlrMJtv4IM2XPaYVHNNKr3bgcryZriJOq0OC7bt1LnunHn0I4kTiInBoGQf4eSGfVmgQZzmMpBQeCwzqMcxkIu6qzg5i7qWHVyCrc-JS7paRGjHck9dz8uiIAo5N0YIiD4bvqEnT-knn6kTn4KcMtrZaE9_1Zm6i8rKrEq__lAg637zn4DFTQR_5TFu6SuXATl5s1p7rI1nqdtmivhpIoQODxhhkaWZj_e"/>
+<img alt="Assignee" class="w-6 h-6 rounded-full border border-surface-container-highest" data-alt="Assignee MK" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBy3TtKnBbcdIQdSYRSTQCZN1W6EqQ6YCkJZdquQkCGBl8H0gOrD8S21f3moWKS2y_YXyFmh-3upCam-tsYmhfVDgMLpdMIYVxwUyFjiUCWhy4THTviqYP3HvwDZfagVv3x1emj_CHrujlYTkcWnX8kHa9r1a8b1TT72F_QuHUJhIA7Lw-BrCvzzfzas9H3gpt7SyIdOPgzifDjAqRVrzBzKCXGRzenBwcjOXacfWVun7b_qQflXgTNVQQx7hjDOoFa4jeRnxkyvwCO"/>
+</div>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="glass-card p-5 rounded-DEFAULT group cursor-grab border-l-4 border-l-secondary">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-secondary uppercase">API</span>
+</div>
+<h4 class="text-white font-medium mb-2 group-hover:text-primary transition-colors">Weather SDK Webhooks</h4>
+<p class="text-body-md text-slate-400 mb-4 line-clamp-2">Establishing reliable connections to the Arctic Weather API.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="text-[10px] text-slate-500 font-label">30m ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Done -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_rgba(78,230,170,0.8)]"></div>
+<h3 class="font-headline font-semibold text-white tracking-wide">Done</h3>
+<span class="text-xs font-bold bg-white/5 px-2 py-0.5 rounded text-slate-400">2</span>
+</div>
+<button class="text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+<div class="flex flex-col gap-4 opacity-70">
+<!-- Task Card 1 -->
+<div class="glass-card p-5 rounded-DEFAULT border-l-4 border-l-tertiary bg-white/[0.02]">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-tertiary uppercase">Success</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h4 class="text-slate-400 font-medium mb-2 line-through">Security Audit Phase 1</h4>
+<p class="text-body-md text-slate-500 mb-4 line-clamp-1">Full pentest of the encryption module.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="text-[10px] text-slate-600 font-label">Completed 2d ago</span>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="glass-card p-5 rounded-DEFAULT border-l-4 border-l-tertiary bg-white/[0.02]">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold tracking-widest text-tertiary uppercase">Success</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h4 class="text-slate-400 font-medium mb-2 line-through">Onboarding Flow V2</h4>
+<p class="text-body-md text-slate-500 mb-4 line-clamp-1">Optimizing user registration for Arctic enterprise clients.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="text-[10px] text-slate-600 font-label">Completed 4d ago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Metric Summary (Bento-lite) -->
+<section class="mt-20 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32 border-none">
+<span class="text-xs font-bold tracking-wider text-slate-500 uppercase">Velocity</span>
+<div class="flex items-end justify-between">
+<span class="text-4xl font-bold text-white">84%</span>
+<span class="text-tertiary text-xs font-bold">+12% vs LW</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32 border-none bg-primary/5">
+<span class="text-xs font-bold tracking-wider text-primary uppercase">Active Sprints</span>
+<div class="flex items-end justify-between">
+<span class="text-4xl font-bold text-white">12</span>
+<span class="text-slate-500 text-xs font-bold">4 teams</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32 border-none">
+<span class="text-xs font-bold tracking-wider text-slate-500 uppercase">Blockers</span>
+<div class="flex items-end justify-between">
+<span class="text-4xl font-bold text-white">0</span>
+<span class="text-tertiary text-xs font-bold">Healthy</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32 border-none">
+<span class="text-xs font-bold tracking-wider text-slate-500 uppercase">Est. Completion</span>
+<div class="flex items-end justify-between">
+<span class="text-2xl font-bold text-white">Mar 24</span>
+<span class="text-slate-500 text-xs font-bold">14 days left</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Mobile Nav -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-xl border-t border-white/10 flex items-center justify-around z-50">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">view_kanban</span>
+<span class="text-[10px] font-bold">Board</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+<span class="text-[10px] font-medium">List</span>
+</button>
+<div class="relative -top-6">
+<button class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-lg shadow-primary/40">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<button class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px] font-medium">Dates</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</nav>
+</body></html>
