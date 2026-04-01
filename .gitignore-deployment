@@ -1,0 +1,29 @@
+# GitHub Pages Deployment Notes
+
+## To deploy to GitHub Pages:
+
+### Option 1: Automatic Deployment (Recommended)
+1. Make sure you have a GitHub repository set up
+2. Push your code to the main branch
+3. The GitHub Actions workflow (.github/workflows/deploy.yml) will automatically:
+   - Build your project
+   - Deploy it to GitHub Pages
+4. Go to Settings → Pages in your GitHub repo
+5. Select "GitHub Actions" as the deployment source
+6. Your site will be available at: https://yourusername.github.io/kanban-board/
+
+### Option 2: Manual Deployment
+```bash
+npm run deploy
+```
+
+This command:
+1. Builds the project
+2. Commits the dist folder
+3. Pushes to gh-pages branch
+4. GitHub Pages will automatically serve the latest version
+
+## Important Notes:
+- The `base` in vite.config.ts is set to '/kanban-board/' - change this if your repo name is different
+- Make sure GitHub Pages is enabled in your repository settings
+- Select "GitHub Actions" as the source (not "Deploy from a branch")
