@@ -1,5 +1,4 @@
 import React from 'react';
-import { Icon } from './ui/Icon';
 
 export type BoardFilter = 'all' | 'my-tasks' | 'high-priority' | 'overdue';
 
@@ -13,7 +12,6 @@ const FILTERS: readonly { id: BoardFilter; label: string }[] = [
 interface ToolbarProps {
   readonly filter: BoardFilter;
   readonly onFilterChange: (filter: BoardFilter) => void;
-  readonly onNewTask: () => void;
   readonly searchQuery: string;
   readonly onSearchChange: (value: string) => void;
 }
@@ -21,11 +19,10 @@ interface ToolbarProps {
 export const Toolbar: React.FC<ToolbarProps> = ({
   filter,
   onFilterChange,
-  onNewTask,
   searchQuery,
   onSearchChange,
 }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 relative z-10">
+  <div className="flex items-center justify-between gap-4 mb-5 shrink-0 relative z-10">
     <div className="flex gap-2 overflow-x-auto pb-1 -mb-1" role="group" aria-label="Filter tasks">
       {FILTERS.map(({ id, label }) => (
         <button
@@ -46,31 +43,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       ))}
     </div>
 
-    <div className="flex items-center gap-3">
-      {searchQuery && (
-        <button
-          type="button"
-          onClick={() => onSearchChange('')}
-          className="text-xs text-outline hover:text-white transition-colors cursor-pointer whitespace-nowrap"
-        >
-          Clear search
-        </button>
-      )}
+    {searchQuery && (
       <button
         type="button"
-        onClick={onNewTask}
-        className="
-          py-2 px-5 rounded-full
-          bg-gradient-to-br from-primary to-primary-container
-          text-on-primary font-bold text-sm
-          flex items-center justify-center gap-2
-          shadow-lg shadow-primary/20
-          hover:brightness-110 active:scale-95 transition-all cursor-pointer
-        "
+        onClick={() => onSearchChange('')}
+        className="text-xs text-outline hover:text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
       >
-        <Icon name="plus" className="w-4 h-4" />
-        New Task
+        Clear search
       </button>
-    </div>
+    )}
   </div>
 );

@@ -12,13 +12,17 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import type { Task, TaskFormData } from '../types';
 import { CURRENT_USER_ID } from '../data/config';
 import { useKanbanBoard } from '../hooks/useKanbanBoard';
+import { useBoardStats } from '../hooks/useBoardStats';
 import { useNow } from '../hooks/useNow';
 import { isOverdue } from '../utils/date';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskModal } from './TaskModal';
 import { TaskCard } from './TaskCard';
+import { TaskListView } from './TaskListView';
 import { Toolbar, type BoardFilter } from './Toolbar';
 import { TopNav } from './TopNav';
+import { Sidebar, type BoardView } from './Sidebar';
+import { BoardStats } from './BoardStats';
 import { UndoToast } from './ui/UndoToast';
 
 export const KanbanBoard: React.FC = () => {
@@ -27,6 +31,7 @@ export const KanbanBoard: React.FC = () => {
     addTask,
     updateTask,
     deleteTask,
+    resetBoard,
     handleDragEnd,
     undoLabel,
     undo,
@@ -39,7 +44,11 @@ export const KanbanBoard: React.FC = () => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<BoardFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState<BoardView>('board');
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
   const now = useNow();
+  const stats = useBoardStats(board, now);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -106,65 +115,85 @@ export const KanbanBoard: React.FC = () => {
     });
   }, [board, filter, searchQuery, now]);
 
-  const visibleCount = visibleColumns.reduce((sum, c) => sum + c.tasks.length, 0);
-  const isFiltering = filter !== 'all' || searchQuery.trim().length > 0;
+  const totalTasks = Object.keys(board.tasks).length;
 
   return (
-    <div className="text-on-surface selection:bg-primary/30 font-sans h-screen flex flex-col overflow-hidden">
+    <div className="text-on-surface selection:bg-primary/30 font-sans h-screen overflow-hidden">
       <div className="aurora-orb bg-primary top-[-10%] left-[-10%]" />
       <div className="aurora-orb bg-secondary bottom-[-10%] right-[-10%]" />
       <div className="fixed inset-0 particle-grid pointer-events-none" />
 
-      <TopNav searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Sidebar
+        view={view}
+        onViewChange={(next) => {
+          setView(next);
+          setIsNavOpen(false);
+        }}
+        onNewTask={() => {
+          openNewTask();
+          setIsNavOpen(false);
+        }}
+        onResetBoard={resetBoard}
+        taskCount={totalTasks}
+        isOpen={isNavOpen}
+        onClose={() => setIsNavOpen(false)}
+      />
 
-      <main className="mt-16 px-4 sm:px-8 py-6 flex-1 flex flex-col overflow-hidden">
+      <TopNav
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenNav={() => setIsNavOpen(true)}
+      />
+
+      <main className="lg:ml-60 mt-16 h-[calc(100vh-4rem)] px-4 sm:px-6 py-5 flex flex-col overflow-hidden">
         <Toolbar
           filter={filter}
           onFilterChange={setFilter}
-          onNewTask={() => openNewTask()}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
 
-        <div className="flex-1 overflow-x-auto overflow-y-hidden relative z-10 w-full pb-2">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={(e) => setActiveTask(board.tasks[String(e.active.id)] ?? null)}
-            onDragEnd={(e) => {
-              handleDragEnd(e);
-              setActiveTask(null);
-            }}
-            onDragCancel={() => setActiveTask(null)}
-          >
-            <div className="flex gap-4 lg:gap-6 h-full items-stretch px-1 min-w-max lg:min-w-0 lg:w-full">
-              {visibleColumns.map(({ column, tasks, totalCount }) => (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  tasks={tasks}
-                  totalCount={totalCount}
-                  onSelectTask={openEditTask}
-                  onAddTask={openNewTask}
-                />
-              ))}
-            </div>
-
-            <DragOverlay dropAnimation={null}>
-              {activeTask && (
-                <div className="w-[280px] rotate-[2deg] cursor-grabbing">
-                  <TaskCard task={activeTask} onSelect={() => {}} isOverlay />
+        <div className="flex-1 min-h-0 relative z-10">
+          {view === 'board' ? (
+            <div className="h-full overflow-x-auto overflow-y-hidden">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={(e) => setActiveTask(board.tasks[String(e.active.id)] ?? null)}
+                onDragEnd={(e) => {
+                  handleDragEnd(e);
+                  setActiveTask(null);
+                }}
+                onDragCancel={() => setActiveTask(null)}
+              >
+                <div className="flex gap-4 lg:gap-6 h-full items-stretch px-1 min-w-max xl:min-w-0 xl:w-full">
+                  {visibleColumns.map(({ column, tasks, totalCount }) => (
+                    <KanbanColumn
+                      key={column.id}
+                      column={column}
+                      tasks={tasks}
+                      totalCount={totalCount}
+                      onSelectTask={openEditTask}
+                      onAddTask={openNewTask}
+                    />
+                  ))}
                 </div>
-              )}
-            </DragOverlay>
-          </DndContext>
+
+                <DragOverlay dropAnimation={null}>
+                  {activeTask && (
+                    <div className="w-[280px] rotate-[2deg] cursor-grabbing">
+                      <TaskCard task={activeTask} onSelect={() => {}} isOverlay />
+                    </div>
+                  )}
+                </DragOverlay>
+              </DndContext>
+            </div>
+          ) : (
+            <TaskListView groups={visibleColumns} onSelectTask={openEditTask} />
+          )}
         </div>
 
-        {isFiltering && visibleCount === 0 && (
-          <p className="text-center text-sm text-outline pb-4 relative z-10">
-            No tasks match the current filter.
-          </p>
-        )}
+        <BoardStats stats={stats} />
       </main>
 
       {isTaskModalOpen && (

@@ -92,6 +92,28 @@ describe('KanbanBoard', () => {
     expect(trigger).toHaveFocus();
   });
 
+  it('switches to the list view and still shows every task', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'List' }));
+
+    const list = screen.getByRole('list', { name: 'All tasks' });
+    expect(within(list).getAllByRole('button')).toHaveLength(9);
+    expect(screen.getByText('Design token audit')).toBeInTheDocument();
+    // Columns are gone in list view.
+    expect(screen.queryByRole('heading', { name: 'Todo' })).not.toBeInTheDocument();
+  });
+
+  it('derives the summary stats from the board rather than hardcoding them', () => {
+    render(<App />);
+    const summary = screen.getByRole('region', { name: 'Board summary' });
+
+    // Seed board: 9 tasks, 2 of them in Done.
+    expect(within(summary).getByText('22%')).toBeInTheDocument();
+    expect(within(summary).getByText('2 of 9 done')).toBeInTheDocument();
+  });
+
   it('recovers from a corrupt persisted board instead of crashing', () => {
     window.localStorage.setItem('kanban-board-data-v4', '{"columns":"not-an-array"}');
     render(<App />);
