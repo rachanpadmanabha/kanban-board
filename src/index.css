@@ -51,6 +51,8 @@
   --color-secondary-fixed-dim: #bdc2ff;
   --color-on-tertiary-fixed: #002114;
 
+  --color-warning: #fbbf24;
+
   /* Glass surfaces — the translucent layers the whole UI is built from. */
   --color-glass: rgba(255, 255, 255, 0.06);
   --color-glass-hover: rgba(255, 255, 255, 0.1);

@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 import type { Task, TaskFormData, Priority } from '../types';
-import { AVAILABLE_TAGS, PRIORITY_CONFIG, DEFAULT_COLUMNS, USERS } from '../data/mockData';
+import {
+  AVAILABLE_TAGS,
+  DEFAULT_COLUMNS,
+  PRIORITY_CONFIG,
+  PRIORITY_ORDER,
+  USERS,
+} from '../data/config';
 import { Modal } from './ui/Modal';
 import { GlassButton } from './ui/GlassButton';
 import { GlassInput } from './ui/GlassInput';
+import { GlassSelect } from './ui/GlassSelect';
+import { FieldLabel } from './ui/fieldStyles';
 import { TagBadge } from './ui/Badge';
 
 interface TaskModalProps {
@@ -14,7 +22,7 @@ interface TaskModalProps {
   readonly defaultColumnId?: string;
 }
 
-const priorityOptions: Priority[] = ['low', 'medium', 'high', 'urgent'];
+const TITLE_MAX = 120;
 
 export const TaskModal: React.FC<TaskModalProps> = ({
   onClose,
@@ -26,12 +34,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium');
-  const [tags, setTags] = useState<string[]>(task ? [...task.tags] : []);
+  const [tags, setTags] = useState<readonly string[]>(task?.tags ?? []);
   const [columnId, setColumnId] = useState(task?.columnId ?? defaultColumnId);
-  const [assigneeId, setAssigneeId] = useState<string>(task?.assigneeId ?? '');
+  const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? '');
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? '');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const handleSubmit = () => {
-    if (!title.trim()) return;
+  const isEdit = Boolean(task);
+  const canSave = title.trim().length > 0;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSave) return;
     onSave({
       title: title.trim(),
       description: description.trim(),
@@ -39,30 +53,25 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       tags,
       columnId,
       assigneeId: assigneeId || undefined,
+      dueDate: dueDate || undefined,
     });
   };
 
-  const toggleTag = (tag: string) => {
-    setTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const isEdit = Boolean(task);
+  const toggleTag = (tag: string) =>
+    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
   return (
     <Modal onClose={onClose} title={isEdit ? 'Edit Task' : 'New Task'}>
-      <div className="flex flex-col gap-5">
-        {/* Title */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <GlassInput
           id="task-title"
           label="Title"
           value={title}
           onChange={setTitle}
           placeholder="What needs to be done?"
+          maxLength={TITLE_MAX}
         />
 
-        {/* Description */}
         <GlassInput
           id="task-description"
           label="Description"
@@ -73,13 +82,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           rows={3}
         />
 
-        {/* Priority */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-text-hint uppercase tracking-wider">
+        <fieldset className="flex flex-col gap-2 border-0 p-0 m-0">
+          <legend className="text-[10px] font-bold text-outline uppercase tracking-widest pl-1 mb-2">
             Priority
-          </label>
-          <div className="flex gap-2">
-            {priorityOptions.map(p => {
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {PRIORITY_ORDER.map((p) => {
               const config = PRIORITY_CONFIG[p];
               const isSelected = priority === p;
               return (
@@ -87,140 +95,115 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   key={p}
                   type="button"
                   onClick={() => setPriority(p)}
+                  aria-pressed={isSelected}
                   className={`
-                    px-4 py-2 rounded-full text-xs font-bold
-                    transition-all duration-200 cursor-pointer border
+                    px-4 py-2 rounded-full text-xs font-bold border
+                    transition-colors duration-200 cursor-pointer
                     ${isSelected
-                      ? 'shadow-lg bg-surface-variant text-white border-white/20'
-                      : 'bg-white/5 border-transparent text-outline hover:bg-white/10 hover:text-white'
-                    }
+                      ? config.chip
+                      : 'bg-white/5 border-transparent text-outline hover:bg-white/10 hover:text-white'}
                   `}
-                  style={isSelected ? { color: config.color, borderColor: config.color } : { borderLeftColor: config.color, borderLeftWidth: '3px' }}
                 >
                   {config.label}
                 </button>
               );
             })}
           </div>
-        </div>
+        </fieldset>
 
-        {/* Tags */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-outline uppercase tracking-widest pl-1">
+        <fieldset className="flex flex-col gap-2 border-0 p-0 m-0">
+          <legend className="text-[10px] font-bold text-outline uppercase tracking-widest pl-1 mb-2">
             Tags
-          </label>
+          </legend>
           <div className="flex flex-wrap gap-2">
-            {AVAILABLE_TAGS.map(tag => {
+            {AVAILABLE_TAGS.map((tag) => {
               const isSelected = tags.includes(tag);
               return (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => toggleTag(tag)}
+                  aria-pressed={isSelected}
                   className={`
-                    px-3 py-1.5 rounded-full text-[10px] font-bold
-                    transition-all duration-200 cursor-pointer border
+                    px-3 py-1.5 rounded-full text-[10px] font-bold border
+                    transition-colors duration-200 cursor-pointer
                     ${isSelected
                       ? 'text-primary bg-primary-container/20 border-primary/30'
-                      : 'text-outline bg-white/5 border-transparent hover:bg-white/10 hover:text-white'
-                    }
+                      : 'text-outline bg-white/5 border-transparent hover:bg-white/10 hover:text-white'}
                   `}
                 >
-                  {isSelected ? '✓ ' : ''}{tag}
+                  {isSelected ? '✓ ' : ''}
+                  {tag}
                 </button>
               );
             })}
           </div>
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {tags.map(tag => (
+              {tags.map((tag) => (
                 <TagBadge key={tag} tag={tag} removable onRemove={() => toggleTag(tag)} />
               ))}
             </div>
           )}
-        </div>
+        </fieldset>
 
-        {/* Status */}
-        <div className="flex flex-col gap-2">
-          <label htmlFor="task-status" className="text-[10px] font-bold text-outline uppercase tracking-widest pl-1">
-            Status
-          </label>
-          <select
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <GlassSelect
             id="task-status"
+            label="Status"
             value={columnId}
-            onChange={e => setColumnId(e.target.value)}
-            className="
-              w-full bg-white/5 backdrop-blur-md
-              text-white
-              rounded-DEFAULT
-              border border-white/5
-              px-4 py-3 text-sm font-medium
-              transition-all duration-200 cursor-pointer
-              focus:border-primary/50 focus:ring-1 focus:ring-primary/50 focus:bg-white/10
-              focus:outline-none appearance-none
-            "
-          >
-            {DEFAULT_COLUMNS.map(col => (
-              <option key={col.id} value={col.id} className="bg-surface-variant text-white">
-                {col.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Assignee */}
-        <div className="flex flex-col gap-2">
-          <label htmlFor="task-assignee" className="text-[10px] font-bold text-outline uppercase tracking-widest pl-1">
-            Assignee
-          </label>
-          <select
+            onChange={setColumnId}
+            options={DEFAULT_COLUMNS.map((c) => ({ value: c.id, label: c.title }))}
+          />
+          <GlassSelect
             id="task-assignee"
+            label="Assignee"
             value={assigneeId}
-            onChange={e => setAssigneeId(e.target.value)}
-            className="
-              w-full bg-white/5 backdrop-blur-md
-              text-white
-              rounded-DEFAULT
-              border border-white/5
-              px-4 py-3 text-sm font-medium
-              transition-all duration-200 cursor-pointer
-              focus:border-primary/50 focus:ring-1 focus:ring-primary/50 focus:bg-white/10
-              focus:outline-none appearance-none
-            "
-          >
-            <option value="" className="bg-surface-variant text-white">Unassigned</option>
-            {USERS.map(user => (
-              <option key={user.id} value={user.id} className="bg-surface-variant text-white">
-                {user.name}
-              </option>
-            ))}
-          </select>
+            onChange={setAssigneeId}
+            options={[
+              { value: '', label: 'Unassigned' },
+              ...USERS.map((u) => ({ value: u.id, label: u.name })),
+            ]}
+          />
         </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-2 mt-1">
-        <div>
-          {isEdit && onDelete && (
-            <GlassButton variant="danger" size="sm" onClick={onDelete}>
-              Delete Task
-            </GlassButton>
-          )}
-        </div>
-        <div className="flex gap-2">
+        <GlassInput
+          id="task-due-date"
+          label="Due date"
+          type="date"
+          value={dueDate}
+          onChange={setDueDate}
+        />
+
+        <div className="flex items-center justify-between gap-3 pt-2 mt-1 flex-wrap">
+          <div>
+            {isEdit && onDelete && !confirmingDelete && (
+              <GlassButton variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
+                Delete Task
+              </GlassButton>
+            )}
+            {confirmingDelete && (
+              <div className="flex items-center gap-2">
+                <FieldLabel>Delete?</FieldLabel>
+                <GlassButton variant="danger" size="sm" onClick={onDelete}>
+                  Yes, delete
+                </GlassButton>
+                <GlassButton variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
+                  Keep
+                </GlassButton>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 ml-auto">
             <GlassButton variant="ghost" size="md" onClick={onClose}>
               Cancel
             </GlassButton>
-            <GlassButton
-              variant="primary"
-              size="md"
-              onClick={handleSubmit}
-              disabled={!title.trim()}
-            >
+            <GlassButton variant="primary" size="md" type="submit" disabled={!canSave}>
               {isEdit ? 'Save Changes' : 'Create Task'}
             </GlassButton>
           </div>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 };

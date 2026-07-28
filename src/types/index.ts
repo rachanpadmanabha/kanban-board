@@ -9,6 +9,8 @@ export interface Task {
   readonly columnId: string;
   readonly createdAt: string;
   readonly assigneeId?: string;
+  /** ISO date (no time component) the task is due. */
+  readonly dueDate?: string;
 }
 
 export interface Column {
@@ -18,22 +20,23 @@ export interface Column {
 }
 
 export interface User {
-  id: string;
-  name: string;
-  initials: string;
-  color: string;
+  readonly id: string;
+  readonly name: string;
+  readonly initials: string;
+  readonly accent: 'primary' | 'secondary' | 'tertiary' | 'error';
 }
 
 export interface Board {
   readonly columns: readonly Column[];
-  readonly tasks: Record<string, Task>;
+  readonly tasks: Readonly<Record<string, Task>>;
 }
 
 export interface TaskFormData {
-  title: string;
-  description: string;
-  tags: string[];
-  priority: Priority;
-  columnId: string;
-  assigneeId?: string;
+  readonly title: string;
+  readonly description: string;
+  readonly tags: readonly string[];
+  readonly priority: Priority;
+  readonly columnId: string;
+  readonly assigneeId?: string;
+  readonly dueDate?: string;
 }

@@ -10,6 +10,13 @@ const FOCUSABLE =
   'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
+ * Focus placement lives here rather than on an autoFocus prop: React applies
+ * autoFocus during commit, which would run before this effect and clobber the
+ * element we need to restore focus to on close.
+ */
+const AUTOFOCUS_TARGET = 'input:not([type="hidden"]), textarea, select';
+
+/**
  * Mount this only while the dialog should be visible — callers control the
  * lifetime so that dialog contents get fresh state on every open.
  */
@@ -27,7 +34,9 @@ export const Modal: React.FC<ModalProps> = ({ onClose, title, children }) => {
     const focusable = () =>
       Array.from(contentRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
 
-    focusable()[0]?.focus();
+    const initial =
+      contentRef.current?.querySelector<HTMLElement>(AUTOFOCUS_TARGET) ?? focusable()[0];
+    initial?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

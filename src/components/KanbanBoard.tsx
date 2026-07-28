@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -10,195 +10,163 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import type { Task, TaskFormData } from '../types';
+import { CURRENT_USER_ID } from '../data/config';
 import { useKanbanBoard } from '../hooks/useKanbanBoard';
+import { useNow } from '../hooks/useNow';
+import { isOverdue } from '../utils/date';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskModal } from './TaskModal';
 import { TaskCard } from './TaskCard';
+import { Toolbar, type BoardFilter } from './Toolbar';
+import { TopNav } from './TopNav';
+import { UndoToast } from './ui/UndoToast';
 
 export const KanbanBoard: React.FC = () => {
-  const { board, addTask, updateTask, deleteTask, handleDragEnd } = useKanbanBoard();
+  const {
+    board,
+    addTask,
+    updateTask,
+    deleteTask,
+    handleDragEnd,
+    undoLabel,
+    undo,
+    dismissUndo,
+  } = useKanbanBoard();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [filter, setFilter] = useState<'all' | 'my-tasks' | 'high-priority'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const currentUserId = 'u1'; // Assume standard user is u1
   const [defaultColumnId, setDefaultColumnId] = useState('todo');
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [filter, setFilter] = useState<BoardFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const now = useNow();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const openNewTask = (columnId: string = 'todo') => {
+  const openNewTask = useCallback((columnId = 'todo') => {
     setEditingTask(null);
     setDefaultColumnId(columnId);
     setIsTaskModalOpen(true);
-  };
+  }, []);
 
-  const openEditTask = (task: Task) => {
+  const openEditTask = useCallback((task: Task) => {
     setEditingTask(task);
     setDefaultColumnId(task.columnId);
     setIsTaskModalOpen(true);
-  };
+  }, []);
 
-  const closeTaskModal = () => {
+  const closeTaskModal = useCallback(() => {
     setIsTaskModalOpen(false);
     setEditingTask(null);
-  };
+  }, []);
 
-  const handleSave = (data: TaskFormData) => {
-    if (editingTask) {
-      updateTask(editingTask.id, data);
-    } else {
-      addTask(data);
-    }
+  const handleSave = useCallback((data: TaskFormData) => {
+    if (editingTask) updateTask(editingTask.id, data);
+    else addTask(data);
     closeTaskModal();
-  };
+  }, [editingTask, updateTask, addTask, closeTaskModal]);
 
-  const handleDelete = () => {
-    if (editingTask) {
-      deleteTask(editingTask.id);
-      closeTaskModal();
-    }
-  };
+  const handleDelete = useCallback(() => {
+    if (!editingTask) return;
+    deleteTask(editingTask.id);
+    closeTaskModal();
+  }, [editingTask, deleteTask, closeTaskModal]);
 
-  const getFilteredTasks = (taskIds: readonly string[]) => {
-    return taskIds
-      .map(id => board.tasks[id])
-      .filter(t => {
-        if (!t) return false;
-        if (filter === 'my-tasks' && t.assigneeId !== currentUserId) return false;
-        if (filter === 'high-priority' && t.priority !== 'high' && t.priority !== 'urgent') return false;
-        if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-      });
-  };
+  /**
+   * Filtering runs once per board/query change rather than once per column per
+   * render, and produces stable array identities so memoised columns hold.
+   */
+  const visibleColumns = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    const matches = (task: Task) => {
+      if (filter === 'my-tasks' && task.assigneeId !== CURRENT_USER_ID) return false;
+      if (filter === 'high-priority' && task.priority !== 'high' && task.priority !== 'urgent') {
+        return false;
+      }
+      if (filter === 'overdue' && (task.columnId === 'done' || !isOverdue(task.dueDate, now))) {
+        return false;
+      }
+      if (!query) return true;
+      return (
+        task.title.toLowerCase().includes(query) ||
+        task.description.toLowerCase().includes(query) ||
+        task.tags.some((tag) => tag.toLowerCase().includes(query))
+      );
+    };
+
+    return board.columns.map((column) => {
+      const all = column.taskIds
+        .map((id) => board.tasks[id])
+        .filter((t): t is Task => Boolean(t));
+      return { column, tasks: all.filter(matches), totalCount: all.length };
+    });
+  }, [board, filter, searchQuery, now]);
+
+  const visibleCount = visibleColumns.reduce((sum, c) => sum + c.tasks.length, 0);
+  const isFiltering = filter !== 'all' || searchQuery.trim().length > 0;
 
   return (
     <div className="text-on-surface selection:bg-primary/30 font-sans h-screen flex flex-col overflow-hidden">
-      {/* ── Ambient Aurora Background ── */}
       <div className="aurora-orb bg-primary top-[-10%] left-[-10%]" />
       <div className="aurora-orb bg-secondary bottom-[-10%] right-[-10%]" />
       <div className="fixed inset-0 particle-grid pointer-events-none" />
 
-      {/* ── TopNavBar ── */}
-      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16 bg-[#0a0e1a]/40 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-[#0a0e1a]/50">
-        <div className="flex items-center gap-8">
-          <span className="text-2xl font-bold bg-gradient-to-br from-white to-sky-300 bg-clip-text text-transparent font-['Inter'] tracking-tight">
-            Arctic Kanban
-          </span>
-          <div className="hidden md:flex gap-6 items-center h-full">
-            <a className="text-sky-300 font-semibold border-b-2 border-sky-400 pb-1 font-['Inter'] tracking-tight" href="#">Board</a>
-            <a className="text-on-surface-variant hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">List</a>
-            <a className="text-on-surface-variant hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">Timeline</a>
-            <a className="text-on-surface-variant hover:text-white transition-colors font-['Inter'] tracking-tight" href="#">Analytics</a>
-          </div>
-        </div>
+      <TopNav searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <div className="flex items-center gap-4">
-          <div className="relative hidden lg:block">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="bg-white/5 border-none rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-primary/50 text-white placeholder-outline transition-all focus:outline-none" 
-              placeholder="Search tasks..." 
-              type="text"
-            />
-          </div>
-          <button className="p-2 text-on-surface-variant hover:text-white hover:bg-white/5 rounded-full transition-all cursor-pointer">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-            </svg>
-          </button>
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xs font-bold text-on-primary ml-2 cursor-pointer shadow-lg">
-            RK
-          </div>
-        </div>
-      </nav>
+      <main className="mt-16 px-4 sm:px-8 py-6 flex-1 flex flex-col overflow-hidden">
+        <Toolbar
+          filter={filter}
+          onFilterChange={setFilter}
+          onNewTask={() => openNewTask()}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
-      {/* ── Main Canvas ── */}
-      <main className="mt-16 p-8 flex-1 flex flex-col overflow-hidden">
-        
-        {/* Board Toolbar */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 shrink-0 relative z-10">
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setFilter('all')}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'all' ? 'glass-card text-white' : 'bg-white/5 hover:bg-white/10 text-on-surface-variant'}`}
-              >All Tasks</button>
-              <button 
-                onClick={() => setFilter('my-tasks')}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'my-tasks' ? 'glass-card text-white' : 'bg-white/5 hover:bg-white/10 text-on-surface-variant'}`}
-              >My Tasks</button>
-              <button 
-                 onClick={() => setFilter('high-priority')}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'high-priority' ? 'glass-card text-white' : 'bg-white/5 hover:bg-white/10 text-on-surface-variant'}`}
-              >High Priority</button>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="glass-card px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-              Filter
-            </button>
-            <button 
-              onClick={() => openNewTask()}
-              className="py-2 px-5 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              New Task
-            </button>
-          </div>
-        </header>
-
-        {/* Board Area */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden relative z-10 w-full h-full pb-2">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden relative z-10 w-full pb-2">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
-            onDragStart={(e) => {
-              const task = board.tasks[String(e.active.id)];
-              if (task) setActiveTask(task);
-            }}
+            onDragStart={(e) => setActiveTask(board.tasks[String(e.active.id)] ?? null)}
             onDragEnd={(e) => {
               handleDragEnd(e);
               setActiveTask(null);
             }}
             onDragCancel={() => setActiveTask(null)}
           >
-            <div className="flex gap-4 lg:gap-8 h-full items-stretch px-1 min-w-max lg:min-w-0 lg:w-full">
-              {board.columns.map(column => (
+            <div className="flex gap-4 lg:gap-6 h-full items-stretch px-1 min-w-max lg:min-w-0 lg:w-full">
+              {visibleColumns.map(({ column, tasks, totalCount }) => (
                 <KanbanColumn
                   key={column.id}
                   column={column}
-                  tasks={getFilteredTasks(column.taskIds)}
-                  onTaskClick={openEditTask}
+                  tasks={tasks}
+                  totalCount={totalCount}
+                  onSelectTask={openEditTask}
                   onAddTask={openNewTask}
                 />
               ))}
             </div>
 
-            <DragOverlay>
-              {activeTask ? (
-                <div className="w-[280px] lg:w-[320px] rotate-[2deg] opacity-90">
-                  <TaskCard task={activeTask} onClick={() => {}} />
+            <DragOverlay dropAnimation={null}>
+              {activeTask && (
+                <div className="w-[280px] rotate-[2deg] cursor-grabbing">
+                  <TaskCard task={activeTask} onSelect={() => {}} isOverlay />
                 </div>
-              ) : null}
+              )}
             </DragOverlay>
           </DndContext>
         </div>
+
+        {isFiltering && visibleCount === 0 && (
+          <p className="text-center text-sm text-outline pb-4 relative z-10">
+            No tasks match the current filter.
+          </p>
+        )}
       </main>
 
-      {/* ── Task Modal ── */}
       {isTaskModalOpen && (
         <TaskModal
           key={editingTask?.id ?? `new-${defaultColumnId}`}
@@ -209,6 +177,8 @@ export const KanbanBoard: React.FC = () => {
           defaultColumnId={defaultColumnId}
         />
       )}
+
+      {undoLabel && <UndoToast message={undoLabel} onUndo={undo} onDismiss={dismissUndo} />}
     </div>
   );
 };
