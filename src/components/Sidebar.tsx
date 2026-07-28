@@ -59,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <button
         type="button"
         onClick={onNewTask}
+        title="New task (N)"
         className="
           w-full py-2.5 rounded-full
           bg-gradient-to-br from-primary to-primary-container
@@ -70,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         <Icon name="plus" className="w-4 h-4" />
         New Task
+        <kbd className="ml-1 rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold">N</kbd>
       </button>
 
       <ul className="flex flex-col gap-1">

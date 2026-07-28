@@ -39,11 +39,16 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange, onO
           placeholder="Search title, description or tag..."
           className="
             w-full bg-white/5 border border-transparent rounded-full
-            pl-10 pr-4 py-1.5 text-sm text-white placeholder-outline
+            pl-10 pr-10 py-1.5 text-sm text-white placeholder-outline
             focus:border-primary/40 focus:bg-white/10 focus:outline-none
             transition-colors
           "
         />
+        {!searchQuery && (
+          <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-outline sm:block">
+            /
+          </kbd>
+        )}
       </div>
 
       <div className="flex items-center -space-x-2 ml-auto shrink-0">

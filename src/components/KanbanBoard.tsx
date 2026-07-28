@@ -13,6 +13,7 @@ import type { Task, TaskFormData } from '../types';
 import { CURRENT_USER_ID } from '../data/config';
 import { useKanbanBoard } from '../hooks/useKanbanBoard';
 import { useBoardStats } from '../hooks/useBoardStats';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useNow } from '../hooks/useNow';
 import { isOverdue } from '../utils/date';
 import { KanbanColumn } from './KanbanColumn';
@@ -83,6 +84,16 @@ export const KanbanBoard: React.FC = () => {
     deleteTask(editingTask.id);
     closeTaskModal();
   }, [editingTask, deleteTask, closeTaskModal]);
+
+  const focusSearch = useCallback(() => {
+    document.getElementById('board-search')?.focus();
+  }, []);
+
+  useKeyboardShortcuts({
+    onNewTask: openNewTask,
+    onFocusSearch: focusSearch,
+    enabled: !isTaskModalOpen,
+  });
 
   /**
    * Filtering runs once per board/query change rather than once per column per

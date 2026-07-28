@@ -3,8 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 
+// The button carries a "N" shortcut hint, so match loosely on the label.
+const newTaskButton = () => screen.getByRole('button', { name: /^New Task/ });
+
 const openNewTaskDialog = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(screen.getByRole('button', { name: 'New Task' }));
+  await user.click(newTaskButton());
   return screen.getByRole('dialog');
 };
 
@@ -83,7 +86,7 @@ describe('KanbanBoard', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const trigger = screen.getByRole('button', { name: 'New Task' });
+    const trigger = newTaskButton();
     await user.click(trigger);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
@@ -112,6 +115,32 @@ describe('KanbanBoard', () => {
     // Seed board: 9 tasks, 2 of them in Done.
     expect(within(summary).getByText('22%')).toBeInTheDocument();
     expect(within(summary).getByText('2 of 9 done')).toBeInTheDocument();
+  });
+
+  describe('keyboard shortcuts', () => {
+    it('opens a new task with N and focuses search with /', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.keyboard('n');
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      await user.keyboard('{Escape}');
+
+      await user.keyboard('/');
+      expect(screen.getByRole('searchbox', { name: /search tasks/i })).toHaveFocus();
+    });
+
+    it('does not hijack keys typed into a field', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      const search = screen.getByRole('searchbox', { name: /search tasks/i });
+      await user.click(search);
+      await user.type(search, 'n/a');
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(search).toHaveValue('n/a');
+    });
   });
 
   it('recovers from a corrupt persisted board instead of crashing', () => {
