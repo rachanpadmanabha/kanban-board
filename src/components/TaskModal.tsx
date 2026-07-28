@@ -7,7 +7,6 @@ import { GlassInput } from './ui/GlassInput';
 import { TagBadge } from './ui/Badge';
 
 interface TaskModalProps {
-  readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onSave: (data: TaskFormData) => void;
   readonly onDelete?: () => void;
@@ -18,7 +17,6 @@ interface TaskModalProps {
 const priorityOptions: Priority[] = ['low', 'medium', 'high', 'urgent'];
 
 export const TaskModal: React.FC<TaskModalProps> = ({
-  isOpen,
   onClose,
   onSave,
   onDelete,
@@ -32,28 +30,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [columnId, setColumnId] = useState(task?.columnId ?? defaultColumnId);
   const [assigneeId, setAssigneeId] = useState<string>(task?.assigneeId ?? '');
 
-  // Reset form when task changes
-  React.useEffect(() => {
-    setTitle(task?.title ?? '');
-    setDescription(task?.description ?? '');
-    setPriority(task?.priority ?? 'medium');
-    setTags(task ? [...task.tags] : []);
-    setColumnId(task?.columnId ?? defaultColumnId);
-    setAssigneeId(task?.assigneeId ?? '');
-  }, [task, defaultColumnId]);
-
   const handleSubmit = () => {
     if (!title.trim()) return;
-    const formData: TaskFormData = {
+    onSave({
       title: title.trim(),
       description: description.trim(),
       priority,
       tags,
       columnId,
       assigneeId: assigneeId || undefined,
-    };
-    onSave(formData);
-    onClose();
+    });
   };
 
   const toggleTag = (tag: string) => {
@@ -65,7 +51,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const isEdit = Boolean(task);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Task' : 'New Task'}>
+    <Modal onClose={onClose} title={isEdit ? 'Edit Task' : 'New Task'}>
       <div className="flex flex-col gap-5">
         {/* Title */}
         <GlassInput
@@ -215,7 +201,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       <div className="flex items-center justify-between pt-2 mt-1">
         <div>
           {isEdit && onDelete && (
-            <GlassButton variant="danger" size="sm" onClick={() => { onDelete(); onClose(); }}>
+            <GlassButton variant="danger" size="sm" onClick={onDelete}>
               Delete Task
             </GlassButton>
           )}

@@ -31,8 +31,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       className={`
-        flex flex-col gap-6
-        flex-1 min-w-[200px] h-full relative
+        flex flex-col gap-6 relative h-full
+        w-[280px] shrink-0 lg:w-auto lg:flex-1 lg:min-w-[220px]
         transition-all duration-300 rounded-2xl
         ${isOver ? 'bg-white/5 ring-1 ring-white/10 p-2 -m-2' : ''}
       `}

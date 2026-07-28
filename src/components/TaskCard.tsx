@@ -53,10 +53,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, isDone = fals
       {...attributes}
       {...listeners}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter') onClick(); }}
-      role="button"
-      tabIndex={0}
-      aria-label={`Task: ${task.title}`}
+      // Space is dnd-kit's keyboard drag activator, so only Enter opens the task.
+      // This must stay after the {...listeners} spread or it would shadow it.
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter') {
+          listeners?.onKeyDown?.(e);
+          return;
+        }
+        e.preventDefault();
+        onClick();
+      }}
+      aria-label={`Task: ${task.title}. Press Enter to edit, Space to start dragging.`}
       className={`
         glass-card p-5 rounded-DEFAULT group cursor-grab active:cursor-grabbing border-l-4 ${pClass.border}
         transition-all duration-300 ease-out flex flex-col shrink-0

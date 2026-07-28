@@ -1,36 +1,64 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 
 interface ModalProps {
-  readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly title: string;
   readonly children: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const FOCUSABLE =
+  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Mount this only while the dialog should be visible — callers control the
+ * lifetime so that dialog contents get fresh state on every open.
+ */
+export const Modal: React.FC<ModalProps> = ({ onClose, title, children }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
-    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
 
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+
+    const focusable = () =>
+      Array.from(contentRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+
+    focusable()[0]?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const elements = focusable();
+      if (elements.length === 0) return;
+
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || !contentRef.current?.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    document.addEventListener('keydown', handleEscape);
-    
-    // Trap focus
-    const focusableElements = contentRef.current?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (focusableElements && focusableElements.length > 0) {
-      (focusableElements[0] as HTMLElement).focus();
-    }
 
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = overflow;
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
 
   return (
     <div
@@ -41,12 +69,12 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
         bg-black/60 backdrop-blur-[8px]
         animate-[fadeIn_0.2s_ease-out]
       "
-      onClick={(e) => {
+      onMouseDown={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
       role="dialog"
       aria-modal="true"
-      aria-label={title}
+      aria-labelledby={titleId}
     >
       <div
         ref={contentRef}
@@ -58,9 +86,10 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           animate-[slideUp_0.3s_ease-out]
         "
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
-          <h2 className="text-lg font-semibold text-text-primary tracking-tight">{title}</h2>
+          <h2 id={titleId} className="text-lg font-semibold text-text-primary tracking-tight">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="
@@ -71,19 +100,16 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
               transition-all duration-200
               cursor-pointer
             "
-            aria-label="Close modal"
+            aria-label="Close dialog"
             type="button"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 pb-6 pt-2 max-h-[70vh] overflow-y-auto">
-          {children}
-        </div>
+        <div className="px-6 pb-6 pt-2 max-h-[70vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

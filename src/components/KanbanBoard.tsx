@@ -16,7 +16,7 @@ import { TaskModal } from './TaskModal';
 import { TaskCard } from './TaskCard';
 
 export const KanbanBoard: React.FC = () => {
-  const { board, addTask, updateTask, deleteTask, handleDragStart, handleDragEnd } = useKanbanBoard();
+  const { board, addTask, updateTask, deleteTask, handleDragEnd } = useKanbanBoard();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -28,15 +28,7 @@ export const KanbanBoard: React.FC = () => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-      onPointerDown: (e: any) => {
-        // Only require movement on interactive elements (e.g., buttons, inputs)
-        const isInteractive = (e.target as HTMLElement)?.closest('button, input, select, textarea');
-        if (isInteractive) return false;
-        return true;
-      },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -54,21 +46,24 @@ export const KanbanBoard: React.FC = () => {
     setIsTaskModalOpen(true);
   };
 
+  const closeTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setEditingTask(null);
+  };
+
   const handleSave = (data: TaskFormData) => {
     if (editingTask) {
       updateTask(editingTask.id, data);
     } else {
       addTask(data);
     }
-    setIsTaskModalOpen(false);
-    setEditingTask(null);
+    closeTaskModal();
   };
 
   const handleDelete = () => {
     if (editingTask) {
       deleteTask(editingTask.id);
-      setIsTaskModalOpen(false);
-      setEditingTask(null);
+      closeTaskModal();
     }
   };
 
@@ -166,12 +161,11 @@ export const KanbanBoard: React.FC = () => {
         </header>
 
         {/* Board Area */}
-        <div className="flex-1 overflow-hidden relative z-10 w-full h-full pb-2">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden relative z-10 w-full h-full pb-2">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={(e) => {
-              handleDragStart(e);
               const task = board.tasks[String(e.active.id)];
               if (task) setActiveTask(task);
             }}
@@ -181,7 +175,7 @@ export const KanbanBoard: React.FC = () => {
             }}
             onDragCancel={() => setActiveTask(null)}
           >
-            <div className="flex gap-4 lg:gap-8 h-full items-start w-full px-1">
+            <div className="flex gap-4 lg:gap-8 h-full items-stretch px-1 min-w-max lg:min-w-0 lg:w-full">
               {board.columns.map(column => (
                 <KanbanColumn
                   key={column.id}
@@ -205,14 +199,16 @@ export const KanbanBoard: React.FC = () => {
       </main>
 
       {/* ── Task Modal ── */}
-      <TaskModal
-        isOpen={isTaskModalOpen}
-        onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); }}
-        onSave={handleSave}
-        onDelete={editingTask ? handleDelete : undefined}
-        task={editingTask}
-        defaultColumnId={defaultColumnId}
-      />
+      {isTaskModalOpen && (
+        <TaskModal
+          key={editingTask?.id ?? `new-${defaultColumnId}`}
+          onClose={closeTaskModal}
+          onSave={handleSave}
+          onDelete={editingTask ? handleDelete : undefined}
+          task={editingTask}
+          defaultColumnId={defaultColumnId}
+        />
+      )}
     </div>
   );
 };

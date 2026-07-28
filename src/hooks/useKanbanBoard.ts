@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import type { Board, Task, TaskFormData, Column } from '../types';
+import type { Board, Task, TaskFormData } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 import { INITIAL_BOARD } from '../data/mockData';
 
@@ -152,23 +152,11 @@ export function useKanbanBoard() {
     });
   }, [setBoard]);
 
-  const getColumnTasks = useCallback((column: Column): Task[] => {
-    return column.taskIds
-      .map(id => board.tasks[id])
-      .filter((t): t is Task => Boolean(t));
-  }, [board.tasks]);
-
-  const handleDragStart = useCallback((_event: DragStartEvent) => {
-    // Can be used for visual feedback if needed
-  }, []);
-
   return {
     board,
     addTask,
     updateTask,
     deleteTask,
-    handleDragStart,
     handleDragEnd,
-    getColumnTasks,
   };
 }

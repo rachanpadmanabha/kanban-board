@@ -1,6 +1,6 @@
+/* Inter is loaded via <link> in index.html — an @import here is stripped by the
+   CSS minifier because it cannot precede the @theme/@layer rules below. */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @theme {
   --color-surface-bright: #353946;
@@ -20,7 +20,6 @@
   --color-tertiary-fixed: #68fcbf;
   --color-on-tertiary-container: #004e35;
   --color-surface-tint: #7bd0ff;
-  --color-surface-container: #1b1f1c;
   --color-primary-fixed: #c4e7ff;
   --color-on-primary-fixed: #001e2c;
   --color-inverse-on-surface: #2c303d;
@@ -35,6 +34,7 @@
   --color-outline: #87929a;
   --color-secondary: #bdc2ff;
   --color-surface-container-low: #171b28;
+  --color-surface-container: #1f2331;
   --color-on-secondary-container: #a8afff;
   --color-outline-variant: #3e484f;
   --color-primary-container: #38bdf8;
@@ -50,6 +50,19 @@
   --color-on-primary-fixed-variant: #004c69;
   --color-secondary-fixed-dim: #bdc2ff;
   --color-on-tertiary-fixed: #002114;
+
+  /* Glass surfaces — the translucent layers the whole UI is built from. */
+  --color-glass: rgba(255, 255, 255, 0.06);
+  --color-glass-hover: rgba(255, 255, 255, 0.1);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Text ramp, mapped onto the Material surface tokens above. */
+  --color-text-primary: #dfe2f3;
+  --color-text-secondary: #bdc8d1;
+  --color-text-hint: #87929a;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --shadow-glow-glacial: 0 8px 32px rgba(56, 189, 248, 0.18);
 
   --font-headline: 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -102,15 +115,17 @@
     background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
   }
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
 }
 
 /* ── Arctic Flow Scrollbar ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -118,15 +133,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary-container);
+  background: rgba(56, 189, 248, 0.25);
   border-radius: var(--radius-full);
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-*:hover > ::-webkit-scrollbar-thumb,
-*:active > ::-webkit-scrollbar-thumb {
-  opacity: 1;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
 }
 
 /* ── Selection ── */
@@ -156,5 +168,16 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
