@@ -1,190 +1,115 @@
-# 📋 Kanban Board
+# Arctic Kanban
 
-A modern, interactive kanban board application built with React, TypeScript, and Tailwind CSS. Perfect for managing tasks and workflows with a smooth drag-and-drop experience.
+A task board with drag-and-drop, built with React 19, TypeScript and Tailwind CSS 4.
+State lives entirely in the browser — there is no backend.
 
-## ✨ Features
-
-- **Drag & Drop**: Effortlessly move tasks between columns using dnd-kit
-- **Local Storage**: Your tasks persist across browser sessions
-- **Create Tasks**: Add new tasks directly from the interface
-- **Edit Tasks**: Modify task details inline with a modal interface
-- **Delete Tasks**: Remove tasks when they're complete
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Modern UI**: Glass-morphism design with smooth animations
-- **Type-Safe**: Built with TypeScript for reliability
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
+## Quick start
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/kanban-board.git
-cd kanban-board
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+The app runs at `http://localhost:5173/kanban-board/` (the `/kanban-board/` path
+comes from the `base` setting in `vite.config.ts`, which exists so the build works
+on GitHub Pages).
 
-## 📦 Available Scripts
+## Scripts
 
-```bash
-# Development server with hot reload
-npm run dev
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Dev server with hot reload |
+| `npm run build` | Typecheck, then produce a production build in `dist/` |
+| `npm test` | Run the test suite once |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | ESLint over the whole project |
+| `npm run typecheck` | TypeScript with no emit |
+| `npm run preview` | Serve the production build locally |
 
-# Build for production
-npm run build
+## Features
 
-# Preview production build
-npm run preview
+Board and list views over the same task set, with drag-and-drop between and within
+columns. Tasks carry a title, description, priority, tags, assignee, status and due
+date. Filters cover all tasks, your tasks, high priority and overdue; search matches
+title, description and tags.
 
-# Lint code
-npm run lint
+Deleting a task asks for confirmation and can be undone from the toast that follows.
+The In Progress and Review columns have soft WIP limits that turn the count amber
+once exceeded. The summary strip along the bottom derives completion, in-progress,
+overdue and due-this-week counts from the current board.
 
-# Deploy to GitHub Pages
-npm run deploy
-```
+Press <kbd>N</kbd> for a new task and <kbd>/</kbd> to focus search. Cards are
+reachable by keyboard: <kbd>Enter</kbd> edits, <kbd>Space</kbd> starts a drag and
+the arrow keys move it.
 
-## 🏗️ Project Structure
+## Persistence
+
+The whole board is serialised to `localStorage` under `kanban-board-data-v4`. It is
+validated on read, so a stale or hand-edited payload falls back to the sample board
+rather than breaking the first render. Changes also sync across tabs via the
+`storage` event. "Reset to sample board" in the sidebar restores the seed data and
+is undoable.
+
+Bumping the version suffix on the storage key is the migration strategy — there is
+no upgrade path between shapes.
+
+## Project structure
 
 ```
 src/
 ├── components/
-│   ├── KanbanBoard.tsx      # Main board component
-│   ├── KanbanColumn.tsx      # Column container
-│   ├── TaskCard.tsx          # Individual task card
-│   ├── TaskModal.tsx         # Task creation/edit modal
-│   └── ui/                   # Reusable UI components
-│       ├── Badge.tsx
-│       ├── GlassButton.tsx
-│       ├── GlassCard.tsx
-│       ├── GlassInput.tsx
-│       └── Modal.tsx
+│   ├── KanbanBoard.tsx     # Composition root: state, filtering, layout
+│   ├── KanbanColumn.tsx    # Droppable column with WIP limit and empty state
+│   ├── TaskCard.tsx        # Sortable card (memoised)
+│   ├── TaskListView.tsx    # Flat list view, sorted by priority then due date
+│   ├── TaskModal.tsx       # Create/edit form
+│   ├── Sidebar.tsx         # Brand, view switcher, primary CTA, reset
+│   ├── TopNav.tsx          # Search and avatar stack
+│   ├── Toolbar.tsx         # Filter pills
+│   ├── BoardStats.tsx      # Derived summary strip
+│   ├── NowProvider.tsx     # Shared clock for relative timestamps
+│   └── ui/                 # Modal, Icon, form controls, toast
 ├── hooks/
-│   ├── useKanbanBoard.ts    # Board state management
-│   └── useLocalStorage.ts   # Local storage hook
-├── types/
-│   └── index.ts             # TypeScript type definitions
+│   ├── useKanbanBoard.ts   # Board state, drag handling, single-level undo
+│   ├── useLocalStorage.ts  # Validated, cross-tab persistence
+│   ├── useBoardStats.ts    # Derived metrics
+│   ├── useKeyboardShortcuts.ts
+│   └── useNow.ts           # Clock context
 ├── data/
-│   └── mockData.ts          # Mock/default data
-├── App.tsx
-├── main.tsx
-└── index.css
+│   ├── config.ts           # Priorities, columns, users, tags
+│   └── seed.ts             # Sample board
+├── utils/date.ts           # Relative and due-date formatting
+└── types/index.ts
 ```
 
-## 🛠️ Tech Stack
+Two conventions worth knowing:
 
-- **Frontend Framework**: React 19
-- **Language**: TypeScript 5.9
-- **Build Tool**: Vite 7
-- **Styling**: Tailwind CSS 4.2
-- **Drag & Drop**: dnd-kit 6.3
-- **Linting**: ESLint 9
-- **Package Manager**: npm
+- **Date helpers take `now` as an argument** rather than calling `Date.now()`. That
+  keeps rendering pure and lets one shared timer refresh every relative label.
+- **Priority styling lives in one place** (`PRIORITY_CONFIG`). Tailwind scans source
+  for literal class names, so those strings must stay literal rather than being
+  assembled at runtime.
 
-## 🎨 Component Overview
+## Testing
 
-### KanbanBoard
-Main component that manages the overall board state and layout.
+Vitest with jsdom and Testing Library. The suite covers the board reducer
+(cross-column moves, drop positioning, undo) and the rendered app (task creation,
+search, delete confirmation, dialog focus behaviour, recovery from corrupt storage).
 
-### KanbanColumn
-Represents a column (e.g., To Do, In Progress, Done) with sortable tasks.
-
-### TaskCard
-Individual task card with edit and delete capabilities.
-
-### TaskModal
-Modal dialog for creating and editing tasks.
-
-### UI Components
-- `GlassCard`: Card with glass-morphism effect
-- `GlassButton`: Button component matching the design
-- `GlassInput`: Input field with glass-morphism style
-- `Badge`: Status badge component
-- `Modal`: Generic modal wrapper
-
-## 💾 State Management
-
-The app uses React hooks for state management:
-- `useKanbanBoard`: Manages board state, tasks, and columns
-- `useLocalStorage`: Persists tasks to browser's local storage
-
-## 🌐 Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## 📱 Responsive Design
-
-The application is fully responsive and works on:
-- Desktop (1920px and above)
-- Tablet (768px - 1024px)
-- Mobile (below 768px)
-
-## 🚀 GitHub Pages Deployment
-
-This project is configured for automatic deployment to GitHub Pages.
-
-### Setup Instructions
-
-1. **Repository Settings**:
-   - Go to your repository Settings → Pages
-   - Select "GitHub Actions" as the deployment source
-
-2. **Automatic Deployment**:
-   - The workflow automatically deploys on every push to the `main` branch
-   - Check the "Actions" tab to see deployment status
-
-3. **Manual Deployment**:
-   ```bash
-   npm run deploy
-   ```
-
-### Repository Configuration
-
-Update the following in `vite.config.ts` if needed:
-```ts
-base: '/kanban-board/',  // Replace with your repo name if different
-```
-
-## 📝 Development
-
-### Running Tests
 ```bash
-npm run lint
+npm test
 ```
 
-### Code Style
+## Deployment
 
-This project uses ESLint for code quality. Run linting with:
-```bash
-npm run lint
-```
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which lints, typechecks,
+tests, builds and publishes to GitHub Pages. `.github/workflows/ci.yml` runs the same
+checks on pull requests.
 
-## 🤝 Contributing
+To enable it, go to **Settings → Pages** and select **GitHub Actions** as the source.
+If your repository is not named `kanban-board`, update `base` in `vite.config.ts` to
+match, or the built asset URLs will 404.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## License
 
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 📧 Support
-
-For issues and questions, please open an issue on GitHub.
-
----
-
-**Made with ❤️ for efficient task management**
+MIT
